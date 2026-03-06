@@ -1,4 +1,4 @@
-"""Kernlogik: Scheduling, OBS-Steuerung, Netflix-Oeffnung."""
+"""Core logic: scheduling, OBS control, Netflix automation."""
 
 import subprocess
 import time
@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 
 class Recorder:
-    """Steuert den gesamten Aufnahme-Workflow."""
+    """Controls the entire recording workflow."""
 
     def __init__(self):
         self.status_text = ""
@@ -23,27 +23,26 @@ class Recorder:
         self.is_finished = finished
 
     def _wait_until(self, target_time):
-        """Wartet bis zur Zielzeit. Gibt False zurueck wenn abgebrochen."""
+        """Waits until the target time. Returns False if cancelled."""
         while datetime.now() < target_time:
             if self._cancelled:
-                self._set_status("Abgebrochen.", finished=True)
+                self._set_status("Cancelled.", finished=True)
                 return False
             remaining = target_time - datetime.now()
             mins = int(remaining.total_seconds() // 60)
             secs = int(remaining.total_seconds() % 60)
-            self._set_status(f"Warte auf Startzeit... noch {mins}m {secs}s")
+            self._set_status(f"Waiting for start time... {mins}m {secs}s left")
             time.sleep(1)
         return True
 
     def _start_caffeinate(self, duration_seconds):
-        """Verhindert, dass der Mac einschlaeft."""
+        """Prevents the Mac from sleeping."""
         try:
             self._caffeinate_proc = subprocess.Popen(
                 ["caffeinate", "-d", "-t", str(duration_seconds + 120)]
             )
             return True
         except FileNotFoundError:
-            # Nicht macOS - kein caffeinate verfuegbar
             return True
 
     def _stop_caffeinate(self):
@@ -52,16 +51,16 @@ class Recorder:
             self._caffeinate_proc = None
 
     def _start_obs(self):
-        """Startet OBS falls nicht bereits laufend."""
+        """Launches OBS if not already running."""
         try:
             subprocess.Popen(["open", "-a", "OBS"])
             return True
         except FileNotFoundError:
-            self._set_status("Fehler: 'open' Befehl nicht gefunden. Laeuft dies auf macOS?", finished=True)
+            self._set_status("Error: 'open' command not found. Is this running on macOS?", finished=True)
             return False
 
     def _connect_obs(self, password, max_retries=10):
-        """Verbindet sich mit OBS WebSocket."""
+        """Connects to OBS WebSocket."""
         import obsws_python as obs
 
         for attempt in range(max_retries):
@@ -75,28 +74,26 @@ class Recorder:
             except Exception:
                 if attempt < max_retries - 1:
                     self._set_status(
-                        f"OBS-Verbindung... Versuch {attempt + 2}/{max_retries}"
+                        f"Connecting to OBS... attempt {attempt + 2}/{max_retries}"
                     )
                     time.sleep(3)
 
         self._set_status(
-            "Fehler: Konnte keine Verbindung zu OBS herstellen. "
-            "Ist OBS gestartet und der WebSocket-Server aktiviert?",
+            "Error: Could not connect to OBS. "
+            "Is OBS running and the WebSocket server enabled?",
             finished=True,
         )
         return False
 
     def _open_netflix(self, netflix_url):
-        """Oeffnet Netflix in Chrome mit deaktivierter GPU."""
-        # URL normalisieren
+        """Opens Netflix in Chrome with GPU disabled."""
         url = netflix_url.strip()
         if not url.startswith("http"):
-            # Relative URL -> vollstaendige URL
             if not url.startswith("/"):
                 url = "/" + url
             url = "https://www.netflix.com" + url
 
-        # /title/XXXXX -> /watch/XXXXX fuer direktes Abspielen (immer konvertieren)
+        # /title/XXXXX -> /watch/XXXXX for direct playback
         url = url.replace("/title/", "/watch/")
 
         try:
@@ -106,11 +103,11 @@ class Recorder:
             ])
             return True
         except FileNotFoundError:
-            self._set_status("Fehler: Chrome konnte nicht geoeffnet werden.", finished=True)
+            self._set_status("Error: Could not open Chrome.", finished=True)
             return False
 
     def _send_key(self, key_code):
-        """Sendet einen Tastendruck an Chrome via osascript."""
+        """Sends a keypress to Chrome via osascript."""
         try:
             subprocess.run(["osascript", "-e",
                 'tell application "Google Chrome" to activate'])
@@ -118,10 +115,10 @@ class Recorder:
             subprocess.run(["osascript", "-e",
                 f'tell application "System Events" to key code {key_code}'])
         except FileNotFoundError:
-            pass  # Nicht macOS
+            pass
 
     def _close_netflix_tab(self):
-        """Schliesst den aktiven Chrome-Tab (Cmd+W)."""
+        """Closes the active Chrome tab (Cmd+W)."""
         try:
             subprocess.run(["osascript", "-e",
                 'tell application "Google Chrome" to activate'])
@@ -129,92 +126,92 @@ class Recorder:
             subprocess.run(["osascript", "-e",
                 'tell application "System Events" to keystroke "w" using command down'])
         except FileNotFoundError:
-            pass  # Nicht macOS
+            pass
 
     def _notify_finished(self, message):
-        """Zeigt eine macOS-Benachrichtigung an."""
+        """Shows a macOS notification."""
         try:
             subprocess.run(["osascript", "-e",
-                f'display notification "{message}" with title "Netflix Aufnahme-Planer"'])
+                f'display notification "{message}" with title "OBS Auto-Record"'])
         except FileNotFoundError:
-            pass  # Nicht macOS
+            pass
 
     def run(self, netflix_url, start_time, duration_minutes, obs_password=""):
         """
-        Hauptworkflow - laeuft im Background-Thread.
+        Main workflow - runs in a background thread.
 
         Args:
-            netflix_url: Netflix URL (z.B. /title/82157128 oder vollstaendige URL)
-            start_time: datetime oder None fuer sofortigen Start
-            duration_minutes: Aufnahmedauer in Minuten
-            obs_password: OBS WebSocket Passwort
+            netflix_url: Netflix URL (e.g. /title/82157128 or full URL)
+            start_time: datetime or None for immediate start
+            duration_minutes: Recording duration in minutes
+            obs_password: OBS WebSocket password
         """
         try:
             self._cancelled = False
             duration_seconds = int(duration_minutes * 60)
 
-            # 1. Warten bis Startzeit (falls geplant)
+            # 1. Wait for scheduled start time
             if start_time and start_time > datetime.now():
-                self._set_status(f"Aufnahme geplant fuer {start_time.strftime('%H:%M')}")
+                self._set_status(f"Scheduled for {start_time.strftime('%H:%M')}")
                 if not self._wait_until(start_time):
                     return
 
             if self._cancelled:
-                self._set_status("Abgebrochen.", finished=True)
+                self._set_status("Cancelled.", finished=True)
                 return
 
-            # 2. caffeinate starten
-            self._set_status("Schlafmodus wird deaktiviert...")
+            # 2. Prevent sleep
+            self._set_status("Disabling sleep mode...")
             self._start_caffeinate(duration_seconds)
 
-            # 3. OBS starten
-            self._set_status("OBS wird gestartet...")
+            # 3. Launch OBS
+            self._set_status("Starting OBS...")
             if not self._start_obs():
                 self._stop_caffeinate()
                 return
 
-            # 4. OBS WebSocket verbinden (mit Wartezeit fuer OBS-Start)
-            self._set_status("Verbinde mit OBS...")
+            # 4. Connect to OBS WebSocket
+            self._set_status("Connecting to OBS...")
             time.sleep(5)
             if not self._connect_obs(obs_password):
                 self._stop_caffeinate()
                 return
 
             if self._cancelled:
-                self._set_status("Abgebrochen.", finished=True)
+                self._set_status("Cancelled.", finished=True)
                 self._stop_caffeinate()
                 return
 
-            # 5. Netflix oeffnen
-            self._set_status("Netflix wird geoeffnet...")
+            # 5. Open Netflix
+            self._set_status("Opening Netflix...")
             if not self._open_netflix(netflix_url):
                 self._stop_caffeinate()
                 return
 
-            # 6. Warten bis Netflix geladen und automatisch abspielt (/watch/ URL)
-            self._set_status("Warte auf Netflix (12 Sekunden)...")
+            # 6. Wait for Netflix to load and auto-play (/watch/ URL)
+            self._set_status("Waiting for Netflix to load (12s)...")
             time.sleep(12)
 
-            # 7. Fullscreen aktivieren (Taste F in Netflix)
-            self._set_status("Vollbild wird aktiviert...")
-            self._send_key(3)  # key code 3 = Taste "F"
+            # 7. Enter fullscreen (F key in Netflix)
+            self._set_status("Entering fullscreen...")
+            self._send_key(3)  # key code 3 = F key
             time.sleep(1)
 
             if self._cancelled:
-                self._set_status("Abgebrochen.", finished=True)
+                self._set_status("Cancelled.", finished=True)
                 self._stop_caffeinate()
                 return
 
-            # 8. Aufnahme starten
-            self._set_status("Aufnahme wird gestartet...")
+            # 8. Start recording
+            self._set_status("Starting recording...")
             try:
                 self._obs_client.start_record()
             except Exception as e:
-                self._set_status(f"Fehler beim Starten der Aufnahme: {e}", finished=True)
+                self._set_status(f"Error starting recording: {e}", finished=True)
                 self._stop_caffeinate()
                 return
 
-            # 9. Fuer Dauer warten
+            # 9. Wait for duration
             start = datetime.now()
             end = start + timedelta(seconds=duration_seconds)
             while datetime.now() < end:
@@ -226,38 +223,38 @@ class Recorder:
                 secs_left = int(remaining % 60)
                 mins_total = int(elapsed // 60)
                 self._set_status(
-                    f"Aufnahme laeuft... {mins_total}m aufgenommen, "
-                    f"noch {mins_left}m {secs_left}s"
+                    f"Recording... {mins_total}m recorded, "
+                    f"{mins_left}m {secs_left}s left"
                 )
                 time.sleep(1)
 
-            # 10. Aufnahme stoppen
-            self._set_status("Aufnahme wird gestoppt...")
+            # 10. Stop recording
+            self._set_status("Stopping recording...")
             try:
                 self._obs_client.stop_record()
             except Exception:
-                pass  # Aufnahme war evtl. schon gestoppt
+                pass
 
-            # 11. Netflix Fullscreen beenden + Tab schliessen
-            self._set_status("Netflix wird geschlossen...")
-            self._send_key(3)  # Taste "F" -> Fullscreen beenden
+            # 11. Exit fullscreen + close Netflix tab
+            self._set_status("Closing Netflix...")
+            self._send_key(3)  # F key -> exit fullscreen
             time.sleep(1)
             self._close_netflix_tab()
 
-            # 12. Aufraeumen
+            # 12. Cleanup
             self._stop_caffeinate()
 
             if self._cancelled:
-                self._set_status("Aufnahme abgebrochen und gestoppt.", finished=True)
-                self._notify_finished("Aufnahme abgebrochen.")
+                self._set_status("Recording cancelled and stopped.", finished=True)
+                self._notify_finished("Recording cancelled.")
             else:
                 self._set_status(
-                    f"Aufnahme fertig! ({duration_minutes} Minuten aufgenommen)",
+                    f"Recording complete! ({duration_minutes} minutes recorded)",
                     finished=True,
                 )
-                self._notify_finished("Aufnahme fertig!")
+                self._notify_finished("Recording complete!")
 
         except Exception as e:
             self._stop_caffeinate()
-            self._set_status(f"Unerwarteter Fehler: {e}", finished=True)
-            self._notify_finished(f"Fehler: {e}")
+            self._set_status(f"Unexpected error: {e}", finished=True)
+            self._notify_finished(f"Error: {e}")

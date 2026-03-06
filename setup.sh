@@ -1,83 +1,82 @@
 #!/bin/bash
-# Einmalige Einrichtung fuer OBS Auto-Record
-# Dieses Script im Terminal ausfuehren: bash setup.sh
+# One-time setup for OBS Auto-Record
+# Run in Terminal: bash setup.sh
 
 set -e
 
-echo "=== OBS Auto-Record - Einrichtung ==="
+echo "=== OBS Auto-Record - Setup ==="
 echo ""
 
-# Homebrew pruefen/installieren
+# Check/install Homebrew
 if ! command -v brew &> /dev/null; then
-    echo "Homebrew wird installiert..."
+    echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # M1/M2 Mac: Homebrew Pfad hinzufuegen
     if [ -f /opt/homebrew/bin/brew ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
 else
-    echo "Homebrew ist bereits installiert."
+    echo "Homebrew is already installed."
 fi
 
-# Python3 pruefen/installieren
+# Check/install Python3
 if ! command -v python3 &> /dev/null; then
-    echo "Python3 wird installiert..."
+    echo "Installing Python3..."
     brew install python3
 else
-    echo "Python3 ist bereits installiert: $(python3 --version)"
+    echo "Python3 is already installed: $(python3 --version)"
 fi
 
-# OBS Studio pruefen
+# Check OBS Studio
 if [ ! -d "/Applications/OBS.app" ]; then
     echo ""
-    echo "HINWEIS: OBS Studio ist nicht installiert."
-    echo "Bitte lade OBS Studio herunter: https://obsproject.com/download"
-    echo "Oder installiere es mit: brew install --cask obs"
-    read -p "OBS jetzt mit Homebrew installieren? (j/n) " -n 1 -r
+    echo "NOTE: OBS Studio is not installed."
+    echo "Download from: https://obsproject.com/download"
+    echo "Or install with: brew install --cask obs"
+    read -p "Install OBS with Homebrew now? (y/n) " -n 1 -r
     echo ""
-    if [[ $REPLY =~ ^[Jj]$ ]]; then
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
         brew install --cask obs
     fi
 else
-    echo "OBS Studio ist installiert."
+    echo "OBS Studio is installed."
 fi
 
-# Chrome pruefen
+# Check Chrome
 if [ ! -d "/Applications/Google Chrome.app" ]; then
     echo ""
-    echo "HINWEIS: Google Chrome ist nicht installiert."
-    echo "Bitte lade Chrome herunter: https://www.google.com/chrome/"
-    echo "Oder installiere es mit: brew install --cask google-chrome"
-    read -p "Chrome jetzt mit Homebrew installieren? (j/n) " -n 1 -r
+    echo "NOTE: Google Chrome is not installed."
+    echo "Download from: https://www.google.com/chrome/"
+    echo "Or install with: brew install --cask google-chrome"
+    read -p "Install Chrome with Homebrew now? (y/n) " -n 1 -r
     echo ""
-    if [[ $REPLY =~ ^[Jj]$ ]]; then
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
         brew install --cask google-chrome
     fi
 else
-    echo "Google Chrome ist installiert."
+    echo "Google Chrome is installed."
 fi
 
-# Python-Abhaengigkeiten installieren
+# Install Python dependencies
 echo ""
-echo "Python-Pakete werden installiert..."
+echo "Installing Python packages..."
 cd "$(dirname "$0")"
 pip3 install -r requirements.txt
 
-# start.command ausfuehrbar machen
+# Make start.command executable
 chmod +x start.command
 
 echo ""
-echo "=== Einrichtung abgeschlossen! ==="
+echo "=== Setup complete! ==="
 echo ""
-echo "Naechste Schritte:"
-echo "1. OBS Studio oeffnen"
-echo "2. Eine Scene mit 'Display Capture' erstellen"
+echo "Next steps:"
+echo "1. Open OBS Studio"
+echo "2. Create a Scene with 'Display Capture'"
 echo "3. Tools > WebSocket Server Settings:"
-echo "   - 'Enable WebSocket Server' aktivieren"
-echo "   - Passwort merken (wird in der App benoetigt)"
-echo "4. Aufnahmeformat auf MP4 einstellen:"
+echo "   - Enable 'WebSocket Server'"
+echo "   - Note the password (needed in the app)"
+echo "4. Set recording format to MP4:"
 echo "   - Settings > Output > Recording Format: mp4"
-echo "5. Google Chrome oeffnen und bei Netflix einloggen"
-echo "6. Das richtige Netflix-Profil auswaehlen"
-echo "7. Zum Starten: 'Start Aufnahme.command' doppelklicken"
+echo "5. Open Google Chrome and log in to Netflix"
+echo "6. Select the correct Netflix profile"
+echo "7. To start: double-click 'start.command'"
 echo ""

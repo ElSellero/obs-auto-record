@@ -1,104 +1,147 @@
-# Netflix Aufnahme-Planer
+# OBS Auto-Record
 
-Nimm Netflix-Sendungen automatisch mit OBS auf - geplant oder sofort.
-Einfache Web-Oberflaeche, kein technisches Wissen noetig.
+Automatically record Netflix streams with OBS Studio on macOS. Schedule recordings for later or start immediately — perfect for capturing live events you want to watch on your own time.
 
-## Was macht dieses Programm?
+**Example:** The NFL game kicks off at 2:30 AM your time? Schedule a recording, go to sleep, and watch the full game tomorrow morning — spoiler-free.
 
-Du gibst eine Netflix-URL ein, stellst die Uhrzeit und Dauer ein, und das Programm:
-1. Oeffnet Netflix in Chrome zur eingestellten Zeit
-2. Startet OBS und beginnt die Bildschirmaufnahme
-3. Stoppt die Aufnahme nach der eingestellten Dauer
-4. Verhindert, dass der Mac einschlaeft
+## How It Works
 
-## Voraussetzungen
+You provide a Netflix URL, set a start time and duration, and the app handles the rest:
 
-- Mac mit Apple M1/M2 Chip (macOS)
-- Internetverbindung
+1. **Waits** for the scheduled start time (or starts immediately)
+2. **Launches OBS** and connects via WebSocket
+3. **Opens Netflix** in Chrome with `--disable-gpu` (prevents DRM black screen)
+4. **Auto-plays** the content (`/watch/` URL triggers playback automatically)
+5. **Enters fullscreen** (sends `F` key to Netflix)
+6. **Starts recording** via OBS
+7. **Records** for the configured duration with a live progress bar
+8. **Stops recording** when time is up
+9. **Exits fullscreen** and **closes the Netflix tab** (no audio leaking afterwards)
+10. **Sends a macOS notification** when done
+11. **Prevents sleep** throughout the entire process (`caffeinate`)
 
-## Einrichtung (einmalig, fuer den Einrichter)
+The web UI updates live without flickering, shows the current phase, and lets you cancel at any time.
 
-### 1. Benoetigte Programme installieren
+## Requirements
 
-Terminal oeffnen (Spotlight: "Terminal") und ausfuehren:
+- macOS (Apple Silicon or Intel)
+- Google Chrome
+- OBS Studio
+- Internet connection
+
+## Setup
+
+### 1. Install dependencies
+
+Open Terminal and run:
 
 ```bash
-cd ~/Downloads/obs-auto-record   # oder wo der Ordner liegt
+cd ~/Downloads/obs-auto-record   # or wherever you cloned/downloaded it
 bash setup.sh
 ```
 
-Das Script installiert automatisch fehlende Programme (Homebrew, Python, etc.)
-und fragt, ob OBS und Chrome installiert werden sollen.
+This installs Homebrew (if needed), Python, OBS, Chrome, and the Python packages. It also sets the correct file permissions so `start.command` can be launched from Finder.
 
-### 2. OBS Studio konfigurieren
+### 2. Configure OBS Studio
 
-1. **OBS oeffnen**
-2. **Scene erstellen:** Unten links bei "Scenes" auf + klicken
-3. **Display Capture hinzufuegen:**
-   - Bei "Sources" auf + klicken
-   - "Display Capture" (oder "Bildschirmaufnahme") waehlen
-   - OK klicken
-4. **WebSocket aktivieren:**
+1. **Open OBS**
+2. **Create a Scene:** Click `+` under "Scenes" (bottom left)
+3. **Add Display Capture:**
+   - Click `+` under "Sources"
+   - Choose "Display Capture" (or "macOS Screen Capture")
+   - Click OK
+4. **Enable WebSocket Server:**
    - Menu: Tools > WebSocket Server Settings
-   - Haken bei "Enable WebSocket Server"
-   - Passwort merken oder ein eigenes setzen
-   - OK klicken
-5. **Aufnahmeformat einstellen:**
-   - Menu: Settings (oder OBS > Preferences)
-   - Reiter "Output"
+   - Check "Enable WebSocket Server"
+   - Note the password (you'll need it in the app)
+   - Click OK
+5. **Set recording format:**
+   - Menu: Settings (or OBS > Preferences)
+   - Tab: "Output"
    - Recording Format: **mp4**
-   - OK klicken
-6. **Bildschirmaufnahme erlauben:**
-   - macOS fragt beim ersten Mal nach der Berechtigung
-   - Systemeinstellungen > Datenschutz > Bildschirmaufnahme > OBS erlauben
+   - Click OK
+6. **Allow Screen Recording:**
+   - macOS will prompt on first use
+   - System Settings > Privacy & Security > Screen Recording > enable OBS
 
-### 3. Chrome vorbereiten
+### 3. Desktop Audio (Apple Silicon Macs)
 
-1. Google Chrome oeffnen
-2. netflix.com aufrufen und einloggen
-3. Das richtige Profil auswaehlen
-4. Chrome kann danach geschlossen werden
+macOS doesn't allow direct audio capture by default. To record Netflix audio along with the video, you need a virtual audio device.
 
-## Benutzung
+Follow the official OBS guide to set up desktop audio capture using the **VB-Cable** plugin:
 
-### Programm starten
+**[macOS Desktop Audio Capture Guide](https://obsproject.com/kb/macos-desktop-audio-capture-guide)**
 
-Im Finder auf **`start.command`** doppelklicken.
+Without this, your recordings will have video but no sound.
 
-(Beim ersten Mal: Rechtsklick > Oeffnen, da macOS unbekannte Scripts blockiert)
+### 4. Prepare Chrome
 
-Ein Terminal-Fenster oeffnet sich und der Browser zeigt die Aufnahme-Oberflaeche.
+1. Open Google Chrome
+2. Go to netflix.com and log in
+3. Select the correct Netflix profile
+4. Chrome can be closed afterwards — the app will reopen it automatically
 
-### Aufnahme einrichten
+## Usage
 
-1. **Netflix URL:** Den Link zur Sendung einfuegen
-   - Aus der Chrome-Adressleiste kopieren (z.B. `https://www.netflix.com/title/82157128`)
-   - Oder nur den Pfad: `/title/82157128`
-2. **Modus:** "Sofort starten" oder eine Uhrzeit einstellen
-3. **Dauer:** Wie lange aufgenommen werden soll (in Minuten)
-4. **OBS Passwort:** Das Passwort aus den OBS WebSocket-Einstellungen
-5. **Button klicken** und fertig!
+### Start the app
 
-### Wichtig waehrend der Aufnahme
+Double-click **`start.command`** in Finder.
 
-- **MacBook offen lassen** (Deckel nicht zuklappen!)
-- Das Terminal-Fenster nicht schliessen
-- Der Mac darf nicht in den Ruhezustand gehen (wird automatisch verhindert)
+(First time: right-click > Open, since macOS blocks unknown scripts.)
 
-## Wo sind die Aufnahmen?
+If the file won't open at all, run `bash setup.sh` again — it sets the required permissions.
 
-OBS speichert die Aufnahmen standardmaessig im Home-Ordner unter **Videos**
-oder im Ordner, der in OBS unter Settings > Output > Recording Path eingestellt ist.
+A terminal window opens and Chrome shows the recording interface.
 
-Typischer Pfad: `~/Movies` oder `~/Videos`
+### Set up a recording
 
-## Fehlerbehebung
+1. **Netflix URL:** Paste the link to the show or event
+   - From Chrome's address bar (e.g. `https://www.netflix.com/title/82157128`)
+   - Or just the path: `/title/82157128`
+   - `/title/` URLs are automatically converted to `/watch/` for direct playback
+2. **Mode:** "Start now" or set a schedule time
+3. **Duration:** How long to record (in minutes)
+4. **OBS Password:** The password from OBS WebSocket settings
+5. **Click the button** and you're done!
 
-| Problem | Loesung |
-|---------|---------|
-| "start.command" laesst sich nicht oeffnen | Rechtsklick > "Oeffnen" waehlen |
-| OBS-Verbindung fehlgeschlagen | OBS manuell starten, WebSocket-Server pruefen |
-| Schwarzes Bild in der Aufnahme | Bildschirmaufnahme-Berechtigung fuer OBS pruefen |
-| Netflix zeigt schwarzes Bild | Chrome wird automatisch mit --disable-gpu gestartet |
-| Mac geht in Ruhezustand | Deckel offen lassen, Netzteil anschliessen |
-| Aufnahme startet nicht | OBS WebSocket Passwort pruefen |
+### During recording
+
+- **Keep the MacBook lid open** (don't close it!)
+- Don't close the terminal window
+- Sleep mode is automatically prevented
+
+### When recording finishes
+
+- OBS stops recording
+- Netflix exits fullscreen and the tab closes automatically
+- A macOS notification appears
+- The web UI shows the completion status
+
+## Where are the recordings?
+
+OBS saves recordings to the path configured in Settings > Output > Recording Path.
+
+Default: `~/Movies` or `~/Videos`
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `start.command` won't open | Run `bash setup.sh` to fix permissions, or right-click > Open |
+| OBS connection failed | Start OBS manually, check WebSocket server is enabled |
+| Black screen in recording | Check Screen Recording permission for OBS in System Settings |
+| Netflix shows black video | Chrome is launched with `--disable-gpu` automatically; make sure Chrome was fully closed before starting |
+| Mac goes to sleep | Keep lid open, connect power adapter |
+| Recording doesn't start | Check OBS WebSocket password |
+| No audio in recording | Set up VB-Cable for desktop audio: [OBS guide](https://obsproject.com/kb/macos-desktop-audio-capture-guide) |
+
+## Tech Stack
+
+- **[Streamlit](https://streamlit.io/)** — Web UI with live-updating status fragment (no page flickering)
+- **[obsws-python](https://github.com/aatikturk/obsws-python)** — OBS WebSocket control
+- **osascript** — macOS automation (fullscreen, tab close, notifications)
+- **caffeinate** — Prevents macOS sleep during recording
+
+## License
+
+MIT

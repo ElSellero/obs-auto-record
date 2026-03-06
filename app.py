@@ -1,4 +1,4 @@
-"""OBS Auto-Record - Netflix Aufnahme-Planer."""
+"""OBS Auto-Record - Streaming Recording Scheduler."""
 
 import re
 import threading
@@ -8,9 +8,9 @@ import streamlit as st
 
 from recorder import Recorder
 
-st.set_page_config(page_title="Netflix Aufnahme-Planer", page_icon="🎬", layout="centered")
+st.set_page_config(page_title="OBS Auto-Record", page_icon="🎬", layout="centered")
 
-# --- Session State initialisieren ---
+# --- Session State ---
 if "recorder" not in st.session_state:
     st.session_state.recorder = None
 if "recording_config" not in st.session_state:
@@ -20,11 +20,9 @@ if "balloons_shown" not in st.session_state:
 
 
 def validate_netflix_url(url):
-    """Prueft ob die URL eine gueltige Netflix-URL ist."""
     url = url.strip()
     if not url:
         return False
-    # Akzeptiert: /title/XXXXX, /watch/XXXXX, oder vollstaendige Netflix-URLs
     if re.match(r"^/?(title|watch)/\d+", url):
         return True
     if re.match(r"^https?://(www\.)?netflix\.com/", url):
@@ -33,60 +31,58 @@ def validate_netflix_url(url):
 
 
 # --- UI ---
-st.title("Netflix Aufnahme-Planer")
-st.markdown("Nimm Netflix-Sendungen automatisch mit OBS auf.")
+st.title("OBS Auto-Record")
+st.markdown("Schedule and record Netflix streams automatically with OBS.")
 
 if st.session_state.recorder is None:
-    # --- Eingabe-Formular (nur wenn keine Aufnahme aktiv) ---
     mode = st.radio(
-        "Wann starten?",
-        ["Sofort starten", "Geplante Zeit"],
+        "When to start?",
+        ["Start now", "Schedule"],
         horizontal=True,
     )
 
     with st.form("recording_form"):
         netflix_url = st.text_input(
             "Netflix URL",
-            placeholder="/title/82157128 oder https://www.netflix.com/watch/...",
-            help="Kopiere die URL der Netflix-Sendung aus dem Browser.",
+            placeholder="/title/82157128 or https://www.netflix.com/watch/...",
+            help="Copy the URL of the Netflix show from your browser.",
         )
 
         scheduled_time = st.time_input(
-            "Startzeit",
+            "Start time",
             value=time(20, 0),
             step=60,
-            help="Uhrzeit fuer den geplanten Start (minutengenau).",
-            disabled=(mode == "Sofort starten"),
+            help="Scheduled start time (to the minute).",
+            disabled=(mode == "Start now"),
         )
 
         duration = st.number_input(
-            "Dauer (Minuten)",
+            "Duration (minutes)",
             min_value=1,
             max_value=480,
             value=120,
             step=1,
-            help="Wie lange soll aufgenommen werden?",
+            help="How long should the recording last?",
         )
 
         obs_password = st.text_input(
-            "OBS WebSocket Passwort",
+            "OBS WebSocket Password",
             type="password",
-            help="Zu finden in OBS: Tools > WebSocket Server Settings.",
+            help="Found in OBS: Tools > WebSocket Server Settings.",
         )
 
         submitted = st.form_submit_button(
-            "Aufnahme starten" if mode == "Sofort starten" else "Aufnahme planen",
+            "Start recording" if mode == "Start now" else "Schedule recording",
             type="primary",
             use_container_width=True,
         )
 
-    # --- Formular verarbeiten ---
     if submitted:
         if not validate_netflix_url(netflix_url):
-            st.error("Bitte eine gueltige Netflix-URL eingeben (z.B. /title/82157128).")
+            st.error("Please enter a valid Netflix URL (e.g. /title/82157128).")
         else:
             start_time = None
-            if mode == "Geplante Zeit":
+            if mode == "Schedule":
                 now = datetime.now()
                 start_time = now.replace(
                     hour=scheduled_time.hour,
@@ -116,7 +112,7 @@ if st.session_state.recorder is None:
             st.rerun()
 
 
-# --- Status-Anzeige als Fragment (kein Flackern) ---
+# --- Status display (fragment updates every 1s without page flicker) ---
 @st.fragment(run_every="1s")
 def status_fragment():
     rec = st.session_state.recorder
@@ -124,29 +120,28 @@ def status_fragment():
         return
 
     config = st.session_state.recording_config or {}
-    status_text = rec.status_text or "Wird vorbereitet..."
+    status_text = rec.status_text or "Preparing..."
 
-    # Abbrechen-Button (ersetzt den "Aufnahme planen"-Button)
     if not rec.is_finished:
-        if st.button("Aufnahme abbrechen", use_container_width=True):
+        if st.button("Cancel recording", use_container_width=True):
             rec.cancel()
 
     st.divider()
 
-    # Aufnahme-Details
+    # Recording details
     details = f"**URL:** `{config.get('url', '')}`"
     if config.get("start_time"):
-        details += f"  \n**Startzeit:** {config['start_time']}"
-    details += f"  \n**Dauer:** {config.get('duration', '')} Min."
+        details += f"  \n**Start time:** {config['start_time']}"
+    details += f"  \n**Duration:** {config.get('duration', '')} min"
     st.markdown(details)
 
     # Phase + Status
     if not rec.is_finished:
-        if "Warte auf Startzeit" in status_text or "geplant fuer" in status_text:
+        if "Waiting for start" in status_text or "Scheduled for" in status_text:
             st.info(f":clock1: {status_text}")
-        elif "Aufnahme laeuft" in status_text:
+        elif "Recording..." in status_text:
             st.warning(f":red_circle: {status_text}")
-            match = re.search(r"(\d+)m aufgenommen, noch (\d+)m (\d+)s", status_text)
+            match = re.search(r"(\d+)m recorded, (\d+)m (\d+)s left", status_text)
             if match:
                 elapsed = int(match.group(1)) * 60
                 remaining = int(match.group(2)) * 60 + int(match.group(3))
@@ -156,7 +151,7 @@ def status_fragment():
         else:
             st.info(f":gear: {status_text}")
     else:
-        if "Fehler" in status_text or "Abgebrochen" in status_text:
+        if "Error" in status_text or "Cancelled" in status_text:
             st.error(f":x: {status_text}")
         else:
             st.success(f":white_check_mark: {status_text}")
@@ -164,7 +159,7 @@ def status_fragment():
                 st.session_state.balloons_shown = True
                 st.balloons()
 
-        if st.button("Neue Aufnahme", type="primary", use_container_width=True):
+        if st.button("New recording", type="primary", use_container_width=True):
             st.session_state.recorder = None
             st.session_state.recording_config = None
             st.rerun(scope="app")

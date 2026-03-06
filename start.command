@@ -3,45 +3,45 @@ cd "$(dirname "$0")"
 
 clear
 echo ""
-echo "🎬  Netflix Aufnahme-Planer"
+echo "🎬  OBS Auto-Record"
 echo "══════════════════════════════════════════════════"
 echo ""
-echo "📋  Checkliste - bitte vorher pruefen:"
+echo "📋  Checklist - please verify before starting:"
 echo ""
 echo "  💻  MacBook"
-echo "      ├─ 🔌  Am Ladekabel angeschlossen"
-echo "      └─ 📖  Deckel offen lassen (nicht zuklappen!)"
+echo "      ├─ 🔌  Plugged in to power"
+echo "      └─ 📖  Keep the lid open (don't close it!)"
 echo ""
 echo "  🎥  OBS Studio"
-echo "      ├─ ✅  OBS ist installiert und einmal gestartet"
-echo "      ├─ 🖥️   Eine Scene mit 'Display Capture' erstellt"
-echo "      ├─ 🔗  WebSocket Server aktiviert"
+echo "      ├─ ✅  Installed and launched at least once"
+echo "      ├─ 🖥️   A Scene with 'Display Capture' set up"
+echo "      ├─ 🔗  WebSocket Server enabled"
 echo "      │      (Tools > WebSocket Server Settings > Enable)"
-echo "      ├─ 🔑  WebSocket-Passwort gemerkt"
-echo "      └─ 🎞️   Aufnahmeformat auf MP4 gestellt"
+echo "      ├─ 🔑  WebSocket password noted"
+echo "      └─ 🎞️   Recording format set to MP4"
 echo "             (Settings > Output > Recording Format: mp4)"
 echo ""
 echo "  🌐  Google Chrome"
-echo "      ├─ ✅  Chrome ist installiert"
-echo "      ├─ 🔐  Bei Netflix eingeloggt (netflix.com)"
-echo "      └─ 👤  Das richtige Netflix-Profil ausgewaehlt"
+echo "      ├─ ✅  Chrome is installed"
+echo "      ├─ 🔐  Logged in to Netflix (netflix.com)"
+echo "      └─ 👤  Correct Netflix profile selected"
 echo ""
-echo "  🔒  macOS-Berechtigungen"
-echo "      └─ 🖥️   Bildschirmaufnahme fuer OBS erlaubt"
-echo "             (Systemeinstellungen > Datenschutz"
-echo "              > Bildschirmaufnahme > OBS)"
+echo "  🔒  macOS Permissions"
+echo "      └─ 🖥️   Screen Recording allowed for OBS"
+echo "             (System Settings > Privacy & Security"
+echo "              > Screen Recording > OBS)"
 echo ""
 echo "══════════════════════════════════════════════════"
-echo "🚀  App wird gestartet..."
-echo "    (Browser oeffnet sich gleich)"
+echo "🚀  Starting app..."
+echo "    (Browser will open shortly)"
 echo ""
 
-# Homebrew-Pfad fuer M1/M2 Macs
+# Homebrew path for M1/M2 Macs
 if [ -f /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# Chrome mit der App oeffnen (nach kurzer Wartezeit fuer Streamlit-Start)
+# Open Chrome with the app (after a short delay for Streamlit to start)
 (sleep 3 && open -a "Google Chrome" http://localhost:8501) &
 
 python3 -m streamlit run app.py \
