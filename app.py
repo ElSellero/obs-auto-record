@@ -134,9 +134,10 @@ def status_fragment():
     st.divider()
 
     # Aufnahme-Details
-    details = f"**URL:** `{config.get('url', '')}`  \n**Dauer:** {config.get('duration', '')} Min."
+    details = f"**URL:** `{config.get('url', '')}`"
     if config.get("start_time"):
         details += f"  \n**Startzeit:** {config['start_time']}"
+    details += f"  \n**Dauer:** {config.get('duration', '')} Min."
     st.markdown(details)
 
     # Phase + Status
