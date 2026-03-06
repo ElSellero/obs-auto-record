@@ -1,10 +1,10 @@
-# OBS Auto-Record
+# 🎬 OBS Auto-Record
 
 Automatically record Netflix streams with OBS Studio on macOS. Schedule recordings for later or start immediately — perfect for capturing live events you want to watch on your own time.
 
 **Example:** The NFL game kicks off at 2:30 AM your time? Schedule a recording, go to sleep, and watch the full game tomorrow morning — spoiler-free.
 
-## How It Works
+## ⚙️ How It Works
 
 You provide a Netflix URL, set a start time and duration, and the app handles the rest:
 
@@ -17,26 +17,25 @@ You provide a Netflix URL, set a start time and duration, and the app handles th
 7. **Records** for the configured duration with a live progress bar
 8. **Stops recording** when time is up
 9. **Exits fullscreen** and **closes the Netflix tab** (no audio leaking afterwards)
-10. **Sends a macOS notification** when done
-11. **Prevents sleep** throughout the entire process (`caffeinate`)
+10. **Prevents sleep** throughout the entire process (`caffeinate`)
 
-The web UI updates live without flickering, shows the current phase, and lets you cancel at any time.
+The web UI updates live, shows the current phase, and lets you cancel at any time.
 
-## Requirements
+## 📋 Requirements
 
 - macOS (Apple Silicon or Intel)
 - Google Chrome
 - OBS Studio
 - Internet connection
 
-## Setup
+## 🛠️ Setup
 
 ### 1. Install dependencies
 
 Open Terminal and run:
 
 ```bash
-cd ~/Downloads/obs-auto-record   # or wherever you cloned/downloaded it
+cd obs-auto-record
 bash setup.sh
 ```
 
@@ -74,6 +73,8 @@ Follow the official OBS guide to set up desktop audio capture using the **VB-Cab
 
 Without this, your recordings will have video but no sound.
 
+> ⚠️ **Important:** Since this is a desktop audio capture, your Mac's volume level matters! If you mute your system audio, the recording will have no sound either. Make sure the volume is set to an audible level before starting the recording.
+
 ### 4. Prepare Chrome
 
 1. Open Google Chrome
@@ -81,7 +82,7 @@ Without this, your recordings will have video but no sound.
 3. Select the correct Netflix profile
 4. Chrome can be closed afterwards — the app will reopen it automatically
 
-## Usage
+## 🚀 Usage
 
 ### Start the app
 
@@ -114,16 +115,15 @@ A terminal window opens and Chrome shows the recording interface.
 
 - OBS stops recording
 - Netflix exits fullscreen and the tab closes automatically
-- A macOS notification appears
 - The web UI shows the completion status
 
-## Where are the recordings?
+## 📂 Where are the recordings?
 
 OBS saves recordings to the path configured in Settings > Output > Recording Path.
 
 Default: `~/Movies` or `~/Videos`
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -134,14 +134,15 @@ Default: `~/Movies` or `~/Videos`
 | Mac goes to sleep | Keep lid open, connect power adapter |
 | Recording doesn't start | Check OBS WebSocket password |
 | No audio in recording | Set up VB-Cable for desktop audio: [OBS guide](https://obsproject.com/kb/macos-desktop-audio-capture-guide) |
+| Audio recorded but silent | Make sure your Mac volume is not muted — desktop capture records what you hear |
 
-## Tech Stack
+## 🧰 Tech Stack
 
-- **[Streamlit](https://streamlit.io/)** — Web UI with live-updating status fragment (no page flickering)
+- **[Streamlit](https://streamlit.io/)** — Web UI with live-updating status
 - **[obsws-python](https://github.com/aatikturk/obsws-python)** — OBS WebSocket control
-- **osascript** — macOS automation (fullscreen, tab close, notifications)
+- **osascript** — macOS automation (fullscreen, tab close)
 - **caffeinate** — Prevents macOS sleep during recording
 
-## License
+## 📄 License
 
 MIT

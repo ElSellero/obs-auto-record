@@ -128,14 +128,6 @@ class Recorder:
         except FileNotFoundError:
             pass
 
-    def _notify_finished(self, message):
-        """Shows a macOS notification."""
-        try:
-            subprocess.run(["osascript", "-e",
-                f'display notification "{message}" with title "OBS Auto-Record"'])
-        except FileNotFoundError:
-            pass
-
     def run(self, netflix_url, start_time, duration_minutes, obs_password=""):
         """
         Main workflow - runs in a background thread.
@@ -246,15 +238,12 @@ class Recorder:
 
             if self._cancelled:
                 self._set_status("Recording cancelled and stopped.", finished=True)
-                self._notify_finished("Recording cancelled.")
             else:
                 self._set_status(
                     f"Recording complete! ({duration_minutes} minutes recorded)",
                     finished=True,
                 )
-                self._notify_finished("Recording complete!")
 
         except Exception as e:
             self._stop_caffeinate()
             self._set_status(f"Unexpected error: {e}", finished=True)
-            self._notify_finished(f"Error: {e}")
