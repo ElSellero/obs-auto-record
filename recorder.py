@@ -8,13 +8,9 @@ from datetime import datetime, timedelta
 class Recorder:
     """Steuert den gesamten Aufnahme-Workflow."""
 
-    def __init__(self, status_callback):
-        """
-        Args:
-            status_callback: Funktion(status_text, is_finished) die bei
-                             Statusaenderungen aufgerufen wird.
-        """
-        self.status_callback = status_callback
+    def __init__(self):
+        self.status_text = ""
+        self.is_finished = False
         self._caffeinate_proc = None
         self._obs_client = None
         self._cancelled = False
@@ -23,7 +19,8 @@ class Recorder:
         self._cancelled = True
 
     def _set_status(self, text, finished=False):
-        self.status_callback(text, finished)
+        self.status_text = text
+        self.is_finished = finished
 
     def _wait_until(self, target_time):
         """Wartet bis zur Zielzeit. Gibt False zurueck wenn abgebrochen."""
@@ -104,8 +101,8 @@ class Recorder:
 
         try:
             subprocess.Popen([
-                "open", "-a", "Google Chrome", "--args",
-                "--disable-gpu", url
+                "open", "-a", "Google Chrome", url,
+                "--args", "--disable-gpu"
             ])
             return True
         except FileNotFoundError:
