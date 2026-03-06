@@ -45,17 +45,17 @@ def validate_netflix_url(url):
 st.title("Netflix Aufnahme-Planer")
 st.markdown("Nimm Netflix-Sendungen automatisch mit OBS auf.")
 
+mode = st.radio(
+    "Wann starten?",
+    ["Sofort starten", "Geplante Zeit"],
+    horizontal=True,
+)
+
 with st.form("recording_form"):
     netflix_url = st.text_input(
         "Netflix URL",
         placeholder="/title/82157128 oder https://www.netflix.com/watch/...",
         help="Kopiere die URL der Netflix-Sendung aus dem Browser.",
-    )
-
-    mode = st.radio(
-        "Wann starten?",
-        ["Sofort starten", "Geplante Zeit"],
-        horizontal=True,
     )
 
     scheduled_time = st.time_input(
