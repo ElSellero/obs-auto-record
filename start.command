@@ -21,8 +21,8 @@ echo "      ├─ 🔑  WebSocket-Passwort gemerkt"
 echo "      └─ 🎞️   Aufnahmeformat auf MP4 gestellt"
 echo "             (Settings > Output > Recording Format: mp4)"
 echo ""
-echo "  🦊  Firefox"
-echo "      ├─ ✅  Firefox ist installiert"
+echo "  🌐  Google Chrome"
+echo "      ├─ ✅  Chrome ist installiert"
 echo "      ├─ 🔐  Bei Netflix eingeloggt (netflix.com)"
 echo "      └─ 👤  Das richtige Netflix-Profil ausgewaehlt"
 echo ""
@@ -41,8 +41,8 @@ if [ -f /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# Firefox mit der App oeffnen (nach kurzer Wartezeit fuer Streamlit-Start)
-(sleep 3 && open -a Firefox http://localhost:8501) &
+# Chrome mit der App oeffnen (nach kurzer Wartezeit fuer Streamlit-Start)
+(sleep 3 && open -a "Google Chrome" http://localhost:8501) &
 
 python3 -m streamlit run app.py \
     --server.headless=true \

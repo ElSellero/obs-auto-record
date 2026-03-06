@@ -42,19 +42,19 @@ else
     echo "OBS Studio ist installiert."
 fi
 
-# Firefox pruefen
-if [ ! -d "/Applications/Firefox.app" ]; then
+# Chrome pruefen
+if [ ! -d "/Applications/Google Chrome.app" ]; then
     echo ""
-    echo "HINWEIS: Firefox ist nicht installiert."
-    echo "Bitte lade Firefox herunter: https://www.mozilla.org/firefox/"
-    echo "Oder installiere es mit: brew install --cask firefox"
-    read -p "Firefox jetzt mit Homebrew installieren? (j/n) " -n 1 -r
+    echo "HINWEIS: Google Chrome ist nicht installiert."
+    echo "Bitte lade Chrome herunter: https://www.google.com/chrome/"
+    echo "Oder installiere es mit: brew install --cask google-chrome"
+    read -p "Chrome jetzt mit Homebrew installieren? (j/n) " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Jj]$ ]]; then
-        brew install --cask firefox
+        brew install --cask google-chrome
     fi
 else
-    echo "Firefox ist installiert."
+    echo "Google Chrome ist installiert."
 fi
 
 # Python-Abhaengigkeiten installieren
@@ -77,7 +77,7 @@ echo "   - 'Enable WebSocket Server' aktivieren"
 echo "   - Passwort merken (wird in der App benoetigt)"
 echo "4. Aufnahmeformat auf MP4 einstellen:"
 echo "   - Settings > Output > Recording Format: mp4"
-echo "5. Firefox oeffnen und bei Netflix einloggen"
+echo "5. Google Chrome oeffnen und bei Netflix einloggen"
 echo "6. Das richtige Netflix-Profil auswaehlen"
 echo "7. Zum Starten: 'Start Aufnahme.command' doppelklicken"
 echo ""

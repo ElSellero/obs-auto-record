@@ -122,8 +122,13 @@ if submitted and not st.session_state.is_running:
         thread.start()
         st.rerun()
 
-# --- Status-Anzeige ---
-if st.session_state.is_running or st.session_state.status_text:
+
+# --- Status-Anzeige als Fragment (kein Flackern) ---
+@st.fragment(run_every="1s")
+def status_fragment():
+    if not st.session_state.is_running and not st.session_state.status_text:
+        return
+
     st.divider()
 
     if st.session_state.is_running:
@@ -145,8 +150,5 @@ if st.session_state.is_running or st.session_state.status_text:
             st.session_state.is_finished = False
             st.rerun()
 
-# Auto-refresh waehrend Aufnahme laeuft
-if st.session_state.is_running:
-    import time as _time
-    _time.sleep(1)
-    st.rerun()
+
+status_fragment()

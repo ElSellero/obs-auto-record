@@ -6,7 +6,7 @@ Einfache Web-Oberflaeche, kein technisches Wissen noetig.
 ## Was macht dieses Programm?
 
 Du gibst eine Netflix-URL ein, stellst die Uhrzeit und Dauer ein, und das Programm:
-1. Oeffnet Netflix in Firefox zur eingestellten Zeit
+1. Oeffnet Netflix in Chrome zur eingestellten Zeit
 2. Startet OBS und beginnt die Bildschirmaufnahme
 3. Stoppt die Aufnahme nach der eingestellten Dauer
 4. Verhindert, dass der Mac einschlaeft
@@ -28,7 +28,7 @@ bash setup.sh
 ```
 
 Das Script installiert automatisch fehlende Programme (Homebrew, Python, etc.)
-und fragt, ob OBS und Firefox installiert werden sollen.
+und fragt, ob OBS und Chrome installiert werden sollen.
 
 ### 2. OBS Studio konfigurieren
 
@@ -52,12 +52,12 @@ und fragt, ob OBS und Firefox installiert werden sollen.
    - macOS fragt beim ersten Mal nach der Berechtigung
    - Systemeinstellungen > Datenschutz > Bildschirmaufnahme > OBS erlauben
 
-### 3. Firefox vorbereiten
+### 3. Chrome vorbereiten
 
-1. Firefox oeffnen
+1. Google Chrome oeffnen
 2. netflix.com aufrufen und einloggen
 3. Das richtige Profil auswaehlen
-4. Firefox kann danach geschlossen werden
+4. Chrome kann danach geschlossen werden
 
 ## Benutzung
 
@@ -72,7 +72,7 @@ Ein Terminal-Fenster oeffnet sich und der Browser zeigt die Aufnahme-Oberflaeche
 ### Aufnahme einrichten
 
 1. **Netflix URL:** Den Link zur Sendung einfuegen
-   - Aus der Firefox-Adressleiste kopieren (z.B. `https://www.netflix.com/title/82157128`)
+   - Aus der Chrome-Adressleiste kopieren (z.B. `https://www.netflix.com/title/82157128`)
    - Oder nur den Pfad: `/title/82157128`
 2. **Modus:** "Sofort starten" oder eine Uhrzeit einstellen
 3. **Dauer:** Wie lange aufgenommen werden soll (in Minuten)
@@ -99,6 +99,6 @@ Typischer Pfad: `~/Movies` oder `~/Videos`
 | "start.command" laesst sich nicht oeffnen | Rechtsklick > "Oeffnen" waehlen |
 | OBS-Verbindung fehlgeschlagen | OBS manuell starten, WebSocket-Server pruefen |
 | Schwarzes Bild in der Aufnahme | Bildschirmaufnahme-Berechtigung fuer OBS pruefen |
-| Netflix zeigt schwarzes Bild | Firefox benutzen (nicht Chrome/Safari) |
+| Netflix zeigt schwarzes Bild | Chrome wird automatisch mit --disable-gpu gestartet |
 | Mac geht in Ruhezustand | Deckel offen lassen, Netzteil anschliessen |
 | Aufnahme startet nicht | OBS WebSocket Passwort pruefen |

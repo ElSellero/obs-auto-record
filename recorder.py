@@ -90,23 +90,46 @@ class Recorder:
         return False
 
     def _open_netflix(self, netflix_url):
-        """Oeffnet Netflix in Firefox."""
+        """Oeffnet Netflix in Chrome mit deaktivierter GPU."""
         # URL normalisieren
         url = netflix_url.strip()
         if not url.startswith("http"):
             # Relative URL -> vollstaendige URL
             if not url.startswith("/"):
                 url = "/" + url
-            # /title/XXXXX -> /watch/XXXXX fuer direktes Abspielen
-            url = url.replace("/title/", "/watch/")
             url = "https://www.netflix.com" + url
 
+        # /title/XXXXX -> /watch/XXXXX fuer direktes Abspielen (immer konvertieren)
+        url = url.replace("/title/", "/watch/")
+
         try:
-            subprocess.run(["open", "-a", "Firefox", url])
+            subprocess.Popen([
+                "open", "-a", "Google Chrome", "--args",
+                "--disable-gpu", url
+            ])
             return True
         except FileNotFoundError:
-            self._set_status("Fehler: Firefox konnte nicht geoeffnet werden.", finished=True)
+            self._set_status("Fehler: Chrome konnte nicht geoeffnet werden.", finished=True)
             return False
+
+    def _auto_play(self):
+        """Drueckt Leertaste in Chrome um Netflix-Wiedergabe zu starten."""
+        try:
+            subprocess.run(["osascript", "-e",
+                'tell application "Google Chrome" to activate'])
+            time.sleep(1)
+            subprocess.run(["osascript", "-e",
+                'tell application "System Events" to key code 49'])
+        except FileNotFoundError:
+            pass  # Nicht macOS - osascript nicht verfuegbar
+
+    def _notify_finished(self, message):
+        """Zeigt eine macOS-Benachrichtigung an."""
+        try:
+            subprocess.run(["osascript", "-e",
+                f'display notification "{message}" with title "Netflix Aufnahme-Planer"'])
+        except FileNotFoundError:
+            pass  # Nicht macOS
 
     def run(self, netflix_url, start_time, duration_minutes, obs_password=""):
         """
@@ -160,9 +183,12 @@ class Recorder:
                 self._stop_caffeinate()
                 return
 
-            # 6. Warten bis Seite geladen
+            # 6. Warten bis Seite geladen + Auto-Play
             self._set_status("Warte auf Netflix (10 Sekunden)...")
             time.sleep(10)
+            self._set_status("Starte Wiedergabe...")
+            self._auto_play()
+            time.sleep(2)
 
             if self._cancelled:
                 self._set_status("Abgebrochen.", finished=True)
@@ -207,12 +233,15 @@ class Recorder:
 
             if self._cancelled:
                 self._set_status("Aufnahme abgebrochen und gestoppt.", finished=True)
+                self._notify_finished("Aufnahme abgebrochen.")
             else:
                 self._set_status(
                     f"Aufnahme fertig! ({duration_minutes} Minuten aufgenommen)",
                     finished=True,
                 )
+                self._notify_finished("Aufnahme fertig!")
 
         except Exception as e:
             self._stop_caffeinate()
             self._set_status(f"Unerwarteter Fehler: {e}", finished=True)
+            self._notify_finished(f"Fehler: {e}")
