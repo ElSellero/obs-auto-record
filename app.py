@@ -61,7 +61,8 @@ with st.form("recording_form"):
     scheduled_time = st.time_input(
         "Startzeit",
         value=time(20, 0),
-        help="Uhrzeit fuer den geplanten Start.",
+        step=60,
+        help="Uhrzeit fuer den geplanten Start (minutengenau).",
         disabled=(mode == "Sofort starten"),
     )
 
@@ -70,7 +71,7 @@ with st.form("recording_form"):
         min_value=1,
         max_value=480,
         value=120,
-        step=10,
+        step=1,
         help="Wie lange soll aufgenommen werden?",
     )
 
