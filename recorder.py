@@ -109,6 +109,28 @@ class Recorder:
             self._set_status("Fehler: Chrome konnte nicht geoeffnet werden.", finished=True)
             return False
 
+    def _send_key(self, key_code):
+        """Sendet einen Tastendruck an Chrome via osascript."""
+        try:
+            subprocess.run(["osascript", "-e",
+                'tell application "Google Chrome" to activate'])
+            time.sleep(0.5)
+            subprocess.run(["osascript", "-e",
+                f'tell application "System Events" to key code {key_code}'])
+        except FileNotFoundError:
+            pass  # Nicht macOS
+
+    def _close_netflix_tab(self):
+        """Schliesst den aktiven Chrome-Tab (Cmd+W)."""
+        try:
+            subprocess.run(["osascript", "-e",
+                'tell application "Google Chrome" to activate'])
+            time.sleep(0.5)
+            subprocess.run(["osascript", "-e",
+                'tell application "System Events" to keystroke "w" using command down'])
+        except FileNotFoundError:
+            pass  # Nicht macOS
+
     def _notify_finished(self, message):
         """Zeigt eine macOS-Benachrichtigung an."""
         try:
@@ -173,12 +195,17 @@ class Recorder:
             self._set_status("Warte auf Netflix (12 Sekunden)...")
             time.sleep(12)
 
+            # 7. Fullscreen aktivieren (Taste F in Netflix)
+            self._set_status("Vollbild wird aktiviert...")
+            self._send_key(3)  # key code 3 = Taste "F"
+            time.sleep(1)
+
             if self._cancelled:
                 self._set_status("Abgebrochen.", finished=True)
                 self._stop_caffeinate()
                 return
 
-            # 7. Aufnahme starten
+            # 8. Aufnahme starten
             self._set_status("Aufnahme wird gestartet...")
             try:
                 self._obs_client.start_record()
@@ -187,7 +214,7 @@ class Recorder:
                 self._stop_caffeinate()
                 return
 
-            # 8. Fuer Dauer warten
+            # 9. Fuer Dauer warten
             start = datetime.now()
             end = start + timedelta(seconds=duration_seconds)
             while datetime.now() < end:
@@ -204,14 +231,20 @@ class Recorder:
                 )
                 time.sleep(1)
 
-            # 9. Aufnahme stoppen
+            # 10. Aufnahme stoppen
             self._set_status("Aufnahme wird gestoppt...")
             try:
                 self._obs_client.stop_record()
             except Exception:
                 pass  # Aufnahme war evtl. schon gestoppt
 
-            # 10. Aufraeumen
+            # 11. Netflix Fullscreen beenden + Tab schliessen
+            self._set_status("Netflix wird geschlossen...")
+            self._send_key(3)  # Taste "F" -> Fullscreen beenden
+            time.sleep(1)
+            self._close_netflix_tab()
+
+            # 12. Aufraeumen
             self._stop_caffeinate()
 
             if self._cancelled:
