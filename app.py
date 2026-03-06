@@ -130,20 +130,37 @@ def status_fragment():
         return
 
     st.divider()
+    status_text = st.session_state.status_text or ""
 
     if st.session_state.is_running:
-        st.info(st.session_state.status_text or "Laeuft...")
+        # Phase aus Status-Text ableiten
+        if "Warte auf Startzeit" in status_text or "geplant fuer" in status_text:
+            st.info(f":clock1: {status_text}")
+        elif "Aufnahme laeuft" in status_text:
+            st.warning(f":red_circle: {status_text}")
+            # Fortschrittsbalken aus "Xm aufgenommen, noch Ym Zs"
+            match = re.search(r"(\d+)m aufgenommen, noch (\d+)m (\d+)s", status_text)
+            if match:
+                elapsed_m = int(match.group(1))
+                remaining_m = int(match.group(2))
+                remaining_s = int(match.group(3))
+                total = elapsed_m * 60 + remaining_m * 60 + remaining_s
+                if total > 0:
+                    st.progress(elapsed_m * 60 / (elapsed_m * 60 + remaining_m * 60 + remaining_s))
+        else:
+            st.info(f":gear: {status_text}")
 
         if st.button("Abbrechen", type="secondary"):
             if st.session_state.recorder:
                 st.session_state.recorder.cancel()
             st.rerun()
+
     elif st.session_state.is_finished:
-        status_text = st.session_state.status_text
         if "Fehler" in status_text or "Abgebrochen" in status_text:
-            st.error(status_text)
+            st.error(f":x: {status_text}")
         else:
-            st.success(status_text)
+            st.success(f":white_check_mark: {status_text}")
+            st.balloons()
 
         if st.button("Neue Aufnahme"):
             st.session_state.status_text = ""
