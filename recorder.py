@@ -109,17 +109,6 @@ class Recorder:
             self._set_status("Fehler: Chrome konnte nicht geoeffnet werden.", finished=True)
             return False
 
-    def _auto_play(self):
-        """Drueckt Leertaste in Chrome um Netflix-Wiedergabe zu starten."""
-        try:
-            subprocess.run(["osascript", "-e",
-                'tell application "Google Chrome" to activate'])
-            time.sleep(1)
-            subprocess.run(["osascript", "-e",
-                'tell application "System Events" to key code 49'])
-        except FileNotFoundError:
-            pass  # Nicht macOS - osascript nicht verfuegbar
-
     def _notify_finished(self, message):
         """Zeigt eine macOS-Benachrichtigung an."""
         try:
@@ -180,12 +169,9 @@ class Recorder:
                 self._stop_caffeinate()
                 return
 
-            # 6. Warten bis Seite geladen + Auto-Play
-            self._set_status("Warte auf Netflix (10 Sekunden)...")
-            time.sleep(10)
-            self._set_status("Starte Wiedergabe...")
-            self._auto_play()
-            time.sleep(2)
+            # 6. Warten bis Netflix geladen und automatisch abspielt (/watch/ URL)
+            self._set_status("Warte auf Netflix (12 Sekunden)...")
+            time.sleep(12)
 
             if self._cancelled:
                 self._set_status("Abgebrochen.", finished=True)
